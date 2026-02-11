@@ -25,6 +25,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy app
 COPY --from=builder /app/pyproject.toml /app/
+COPY --from=builder /app/README.md /app/
 COPY --from=builder /app/src/ /app/src/
 
 EXPOSE 8000
