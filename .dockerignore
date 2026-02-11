@@ -5,4 +5,5 @@ __pycache__
 .gitignore
 .env
 *.md
+!README.md
 scripts/

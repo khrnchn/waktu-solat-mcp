@@ -4,6 +4,21 @@ MCP server for Malaysian prayer times via [api.waktusolat.app](https://api.waktu
 
 **Tools:** `get_prayer_times_today`, `get_prayer_times_month`, `get_next_prayer`, `list_zones`
 
+## Zone codes (important)
+
+Prayer tools require a JAKIM zone code (for example: `WLY01`, `SGR01`, `JHR01`).
+
+If you are unsure which code to use, run:
+
+- `list_zones()` to see all zones
+- `list_zones("SGR")` to filter by state code (examples: `SGR`, `JHR`, `WLY`)
+
+Example prompts in Claude/Cursor:
+
+- "List all Selangor zones"
+- "Get today's prayer times for `WLY01`"
+- "What's the next prayer for `SGR01`?"
+
 ## Local (stdio)
 
 ```bash
@@ -22,6 +37,11 @@ Claude Desktop config:
   }
 }
 ```
+
+After connecting, try:
+
+- "When is Maghrib in `WLY01` today?"
+- "Show me prayer times this month for `SGR01`"
 
 ## Hosted (HTTP)
 
