@@ -1,0 +1,10 @@
+services:
+  waktusolat-mcp:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      # Set MCP_BASE_URL when behind a proxy (e.g. https://your-app.railway.app)
+      - MCP_BASE_URL=${MCP_BASE_URL:-}
+    restart: unless-stopped

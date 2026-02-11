@@ -11,6 +11,7 @@ dependencies = [
 
 [project.scripts]
 waktusolat-mcp = "waktusolat_mcp.server:main"
+waktusolat-mcp-http = "waktusolat_mcp.server:main_http"
 
 [build-system]
 requires = ["hatchling"]

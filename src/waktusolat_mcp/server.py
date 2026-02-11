@@ -1,7 +1,14 @@
 """MCP server exposing Malaysian prayer times via Waktu Solat API."""
 
+import base64
+import json
+import os
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
+
+from starlette.requests import Request
+from starlette.responses import HTMLResponse
+from starlette.routing import Route
 
 from mcp.server.fastmcp import FastMCP
 
@@ -176,5 +183,75 @@ async def list_zones(state: str | None = None) -> str:
     return "\n".join(lines)
 
 
+def _landing_page_html(base_url: str) -> str:
+    """Generate landing page HTML with Add to Cursor/Claude."""
+    mcp_url = base_url.rstrip("/") + "/mcp"
+    config = {"waktusolat": {"url": mcp_url}}
+    config_b64 = base64.urlsafe_b64encode(json.dumps(config).encode()).decode()
+    cursor_link = f"cursor://anysphere.cursor-deeplink/mcp/install?name=waktusolat&config={config_b64}"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waktu Solat MCP</title>
+  <style>
+    * {{ box-sizing: border-box; }}
+    body {{ font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #333; }}
+    h1 {{ font-size: 1.5rem; margin-bottom: 0.5rem; }}
+    p {{ color: #666; margin: 0 0 1.5rem; }}
+    .card {{ background: #f8f9fa; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }}
+    .card h2 {{ font-size: 1rem; margin: 0 0 0.5rem; }}
+    .card p {{ margin: 0 0 0.75rem; font-size: 0.9rem; }}
+    a.btn {{ display: inline-block; background: #1a1a1a; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }}
+    a.btn:hover {{ background: #333; }}
+    code {{ background: #eee; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.85em; word-break: break-all; }}
+    .url {{ font-size: 0.8rem; margin-top: 0.5rem; }}
+  </style>
+</head>
+<body>
+  <h1>Waktu Solat MCP</h1>
+  <p>Malaysian prayer times for Claude, Cursor, and other MCP clients.</p>
+
+  <div class="card">
+    <h2>Add to Cursor</h2>
+    <p>One-click install.</p>
+    <a href="{cursor_link}" class="btn">Add to Cursor</a>
+  </div>
+
+  <div class="card">
+    <h2>Add to Claude</h2>
+    <p>In Claude: Settings → Connectors → Add custom connector. Use this URL:</p>
+    <code class="url">{mcp_url}</code>
+  </div>
+
+  <div class="card">
+    <h2>Run locally</h2>
+    <p><code>uv sync && uv run waktusolat-mcp</code></p>
+    <a href="https://github.com/khrnchn/waktu-solat-mcp" class="btn">View on GitHub</a>
+  </div>
+</body>
+</html>"""
+
+
+async def _landing_page(request: Request) -> HTMLResponse:
+    # Allow override for proxies (Railway, etc.) that may not set forwarded headers
+    base_url = os.getenv("MCP_BASE_URL") or str(request.base_url).rstrip("/")
+    return HTMLResponse(_landing_page_html(base_url))
+
+
 def main() -> None:
-    mcp.run(transport="stdio")
+    transport = os.getenv("MCP_TRANSPORT", "stdio")
+    if transport == "streamable-http":
+        mcp.settings.host = "0.0.0.0"
+        mcp.settings.port = int(os.getenv("PORT", os.getenv("FASTMCP_PORT", "8000")))
+        mcp._custom_starlette_routes.append(Route("/", _landing_page))
+        mcp.run(transport="streamable-http")
+    else:
+        mcp.run(transport="stdio")
+
+
+def main_http() -> None:
+    """Convenience entry point for HTTP mode (hosting)."""
+    os.environ["MCP_TRANSPORT"] = "streamable-http"
+    main()
