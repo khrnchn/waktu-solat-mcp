@@ -38,12 +38,31 @@ Claude Desktop config:
 }
 ```
 
+Claude Code (local stdio server):
+
+```bash
+claude mcp add --transport stdio waktusolat -- \
+  uv --directory /path/to/waktu-solat-mcp run waktusolat-mcp
+```
+
+Verify in Claude Code:
+
+```bash
+claude mcp list
+claude mcp get waktusolat
+```
+
 After connecting, try:
 
 - "When is Maghrib in `WLY01` today?"
 - "Show me prayer times this month for `SGR01`"
 
 ## Hosted (HTTP)
+
+Public deployment (Railway):
+
+- **Web UI:** `https://web-production-99037.up.railway.app/`
+- **MCP endpoint:** `https://web-production-99037.up.railway.app/mcp`
 
 Run with HTTP transport to serve a web UI with "Add to Cursor" / "Add to Claude" buttons:
 
@@ -56,7 +75,15 @@ Or: `MCP_TRANSPORT=streamable-http uv run waktusolat-mcp`
 - **Web UI:** `http://localhost:8000/`
 - **MCP endpoint:** `http://localhost:8000/mcp`
 
-Deploy to Railway, Render, etc. Set `PORT` (PaaS usually provides this). The app binds to `0.0.0.0` and uses `PORT` automatically. If behind a proxy, set `MCP_BASE_URL` to your public URL (e.g. `https://your-app.railway.app`) so install links use the correct URL.
+Claude Code (remote HTTP server):
+
+```bash
+claude mcp add --transport http waktusolat https://web-production-99037.up.railway.app/mcp
+```
+
+Then run `/mcp` inside Claude Code to check connection/auth status.
+
+Deploy to Railway, Render, etc. Set `PORT` (PaaS usually provides this). The app binds to `0.0.0.0` and uses `PORT` automatically. If behind a proxy, set `MCP_BASE_URL` to your public URL (for example this app uses `https://web-production-99037.up.railway.app`) so install links use the correct URL.
 
 ## Docker
 
